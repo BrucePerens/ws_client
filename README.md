@@ -1,9 +1,10 @@
 # ws_client
 Easier, cleaner WebSocket clients for Crystal
 
-WS_Client is a base class for WebSocket clients that does a lot of the work for
-you. Rather than connect all of the various WebSocket event handlers, you can
-simply declare them as class methods.
+WS_Client is a base class for WebSocket clients that does the work of connecting
+event handler functions, and gracefully shuts down the connection when you
+no longer need it. You simply declare event handlers as class methods,
+and they will be connected for you.
 
 To use it, create your own class derived from `WS_Client`. Implement whichever
 of the methods below that you need:
@@ -62,7 +63,7 @@ arguments as the `WebSocket` constructors.
    # This is a union of `nil`, `Bool`, and `OpenSSL::SSL::Context::Client`.
    # You can leave it empty, set it to `true` to say "Use TLS", or provide
    # a careflly configured SSL context with flags set as you wish. One use
-   # of `OpenSSL::SSL::Context::Client would be to use SSL but disable
+   # of `OpenSSL::SSL::Context::Client` would be to use TLS but disable
    # certificate verification. This argument is optional.
    tls : HTTP::Client::TLSContext = nil,
    
@@ -88,6 +89,10 @@ connection:
    # Is the connection open?
    is_open? : Bool
 ```
+
+The connection is automatically closed in the `finalize` method of your class.
+This will gracefully close the WebSocket when your application exits, or when
+your class is garbage-collected.
 
 You can implement less-often-used methods which mirror those in WebSocket. But
 the underlying software in `WebSocket` will answer pings with pongs, even if
