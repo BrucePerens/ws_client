@@ -109,8 +109,11 @@ end
 
 # Client version of WS_Protocol.
 class WS_Client < WS_Protocol
-  def initialize(path)
-    socket = HTTP::WebSocket.new(uri: path)
+  def initialize(uri : String|URI)
+    socket = HTTP::WebSocket.new(uri: uri)
     internal_connect(socket)
   end
 end
+
+# See https://github.com/BrucePerens/ws_service for the service version, and
+# middleware.
