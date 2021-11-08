@@ -32,7 +32,8 @@ arguments as the `WebSocket` constructors.
    # This contains
    # * The method, either "ws" for insecure websocket, or "wss" for secure ones
    # * The host name.
-   # * The port number.
+   # * The port number. You will often provide a port while testing software under
+   #   development. The default is 80.
    # * The path for this service.
    # * Optional query parameters to communicate additional data to the service
    #   for authentication and initialization.
@@ -48,10 +49,14 @@ arguments as the `WebSocket` constructors.
    # The host name, as in "perens.com"
    host : String,
 
-   # The path to the requested service. This usually begins with '/'.
+   # The path to the requested service, and any additional query parameters which
+   # you would like to use for authentication and initialization.
+   This usually begins with '/'. It might look like "/inform?a=1&b=2&c=Bruce"
    path : String,
 
    # The port number for the requested service, or nil. This argument is optional.
+   # You will often provide a port number while testing software under development.
+   # Of course, the default is 80.
    port : Int32? = nil,
 
    # This is a union of `nil`, `Bool`, and `OpenSSL::SSL::Context::Client`.
