@@ -114,7 +114,7 @@ class WS_Client < WS_Protocol
     internal_connect(socket)
   end
 
-  def initialize(host : String, path : String, port : Int32? = nil, tls : HTTP::Client::TLSContext = nil, headers HTTP::Headers = HTTP::Headers.new)
+  def initialize(host : String, path : String, port : Int32? = nil, tls : HTTP::Client::TLSContext = nil, headers : HTTP::Headers = HTTP::Headers.new)
     socket = HTTP::WebSocket.new(host, path, port, tls, headers)
     internal_connect(socket)
   end
