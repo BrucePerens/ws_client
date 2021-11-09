@@ -1,4 +1,6 @@
-abstract class WS_Protocol
+module WS
+end
+abstract class WS::Protocol
   getter socket : HTTP::WebSocket?
 
   # We transmit from (at least) the main fiber and the ping fiber,
@@ -57,7 +59,7 @@ abstract class WS_Protocol
   end
 
   # This is called when a pong is received.
-  # It's overloaded in WS_Service, and that version notes the pong arrival time,
+  # It's overloaded in WS::Service, and that version notes the pong arrival time,
   # for timing out an unresponsive connection. Then it calls this one.
   def internal_on_pong(message : String)
     on_pong(message)
@@ -107,8 +109,8 @@ abstract class WS_Protocol
   end
 end
 
-# Client version of WS_Protocol.
-class WS_Client < WS_Protocol
+# Client version of WS::Protocol.
+class WS::Client < WS::Protocol
   def initialize(uri : String|URI, headers : HTTP::Headers = HTTP::Headers.new)
     socket = HTTP::WebSocket.new(uri: uri)
     internal_connect(socket)

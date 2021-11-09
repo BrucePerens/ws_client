@@ -1,15 +1,15 @@
 # ws_client
 Easier, cleaner WebSocket clients for Crystal
 
-WS_Client is a base class for WebSocket clients that does the work of connecting
+WS::Client is a base class for WebSocket clients that does the work of connecting
 event handler functions, and gracefully shuts down the connection when you
 no longer need it. You simply declare event handlers as class methods,
 and they will be connected for you.
 
-To use it, create your own class that is a child of `WS_Client`. Implement whichever
+To use it, create your own class that is a child of `WS::Client`. Implement whichever
 of the methods below that you need:
 ```crystal
-class MyClient < WS_Client
+class MyClient < WS::Client
   # This is called when binary data is received.
   def on_binary(b : Bytes)
   end
