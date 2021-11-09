@@ -6,7 +6,7 @@ event handler functions, and gracefully shuts down the connection when you
 no longer need it. You simply declare event handlers as class methods,
 and they will be connected for you.
 
-To use it, create your own class derived from `WS_Client`. Implement whichever
+To use it, create your own class that is a child of `WS_Client`. Implement whichever
 of the methods below that you need:
 ```crystal
 class MyClient < WS_Client
@@ -30,6 +30,7 @@ arguments as the `WebSocket` constructors.
   MyClient.new(
    # The URI as a `String` or `URI` object. In the form
    # method://hostname[:port]/path[?query=value[&query1=value ...]]
+   # for example "wss://perens.com:5000/inform?a=1&b=2&c=Bruce
    # This contains
    # * The method, either "ws" for insecure websocket, or "wss" for secure ones
    # * The host name.
