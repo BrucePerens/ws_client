@@ -6,7 +6,27 @@ event handler functions, and gracefully shuts down the connection when you
 no longer need it. You simply declare event handlers as class methods,
 and they will be connected for you.
 
-To use it, create your own class that is a child of `WS::Client`. Implement whichever
+## How To Use
+add this to your `shards.yml`
+
+```
+dependencies:
+  ...
+  ws_client:
+    github: BrucePerens/ws_client
+    version: ~> 0.2.2
+```
+Create your own service as a child of `WS::Client`. Start by copying the file
+`lib/ws_client/examples/my_client.cr` . This is a template file for your
+new client, and includes a lot of the work you're instructed to do below.
+Change the name of the class, and the filename, as you wish.
+
+Add a `require` statement:
+```crystal
+require "ws_service"
+```
+
+Implement whichever
 of the methods below that you need:
 ```crystal
 class MyClient < WS::Client
