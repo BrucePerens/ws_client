@@ -1,5 +1,8 @@
+require "channel.cr"
+
 module WS
 end
+
 abstract class WS::Protocol
   getter socket : HTTP::WebSocket?
 
@@ -7,7 +10,7 @@ abstract class WS::Protocol
   # so lock transmit so that it is fiber-safe. Receive happens only
   # in its own fiber (which we don't presently have control of), and
   # which calls WebSocket#ping, so we're not 100% fiber-safe.
-  @transmit_mutex : Mutex = Mutex.new
+  @transmit_mutex : Mutex = Mutex.new(protection: Mutex::Protection::Reentrant)
 
   # Close the websocket.
   def close(code : HTTP::WebSocket::CloseCode = HTTP::WebSocket::CloseCode::NormalClosure, message : String = "goodbye")
@@ -40,7 +43,7 @@ abstract class WS::Protocol
   def internal_connect(s : HTTP::WebSocket)
     @socket = s
     s.on_binary { |bytes| self.on_binary(bytes) }
-    s.on_close { |code, message| self.internal_close(code, message) }
+    s.on_close { |code, message| self.internal_on_close(code, message) }
     s.on_message { |string| self.on_message(string) }
     s.on_ping { |string| self.on_ping(string) }
     s.on_pong { |string| self.internal_on_pong(string) }
@@ -51,7 +54,7 @@ abstract class WS::Protocol
     # https://github.com/crystal-lang/crystal/issues/11413
   end
 
-  def internal_close(code : HTTP::WebSocket::CloseCode, message : String)
+  def internal_on_close(code : HTTP::WebSocket::CloseCode, message : String)
     if @socket
       @socket = nil
       self.on_close(code, message)
@@ -67,7 +70,7 @@ abstract class WS::Protocol
 
   # This is called when binary data is received.
   def on_binary(b : Bytes)
-    Log.error { "#{PROGRAM_NAME}: #{self.class.name}#on_binary received data, implement the method!" }
+    Log.error { "#{PROGRAM_NAME}: #{self.class.name}#on_binary received data, but you haven't implement the method!" }
   end
 
   # This is called when the connection is closed. It is not possible to send any
@@ -77,7 +80,7 @@ abstract class WS::Protocol
 
   # This is called when a string data is received.
   def on_message(message : String)
-    Log.error { "#{PROGRAM_NAME}: #{self.class.name}#on_binary received message #{message.inspect}, implement the method!" }
+    Log.error { "#{PROGRAM_NAME}: #{self.class.name}#on_message received a message, but you haven't implemented the method! The message was #{message.inspect}" }
   end
 
   # This is called when a ping is received. The pong is sent in the WebSocket code,
@@ -97,6 +100,10 @@ abstract class WS::Protocol
     end
   end
 
+  def run
+    @socket.not_nil!.run
+  end
+
   # Send data.
   # If data is a `String`, it's sent as a textual message.
   # If data is a `Bytes`, it's sent as a binary message.
@@ -111,14 +118,28 @@ end
 
 # Client version of WS::Protocol.
 class WS::Client < WS::Protocol
-  def initialize(uri : String|URI, headers : HTTP::Headers = HTTP::Headers.new)
+  def initialize(uri : String|URI, headers : HTTP::Headers = HTTP::Headers.new, background : Bool = false)
     socket = HTTP::WebSocket.new(uri: uri)
     internal_connect(socket)
+    if background
+      spawn name: "WS::Client for #{uri}" do
+        run
+      end
+    else
+      run
+    end
   end
 
-  def initialize(host : String, path : String, port : Int32? = nil, tls : HTTP::Client::TLSContext = nil, headers : HTTP::Headers = HTTP::Headers.new)
+  def initialize(host : String, path : String, port : Int32? = nil, tls : HTTP::Client::TLSContext = nil, headers : HTTP::Headers = HTTP::Headers.new, background : Bool = false)
     socket = HTTP::WebSocket.new(host, path, port, tls, headers)
     internal_connect(socket)
+    if background
+      spawn name: "WS::Client for #{host}:#{port||0}//#{path}" do
+        socket.run
+      end
+    else
+      socket.run
+    end
   end
 end
 

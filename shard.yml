@@ -1,5 +1,5 @@
 name: ws_client
-version: 0.2.2
+version: 0.2.3
 
 description: Easier, cleaner WebSocket clients for Crystal.
 

@@ -14,7 +14,7 @@ dependencies:
   ...
   ws_client:
     github: BrucePerens/ws_client
-    version: ~> 0.2.2
+    version: ~> 0.2.3
 ```
 Create your own service as a child of `WS::Client`. Start by copying the file
 `lib/ws_client/examples/my_client.cr` . This is a template file for your
@@ -64,7 +64,12 @@ arguments as the `WebSocket` constructors.
 
    # Any additional headers you wish. This argument is optional.
    # `WebSocket` will provide all necessary headers for the upgrade of the connection.
-   headers : HTTP::Headers
+   headers : HTTP::Headers,
+
+   # If true, this connection will run in the background and this constructor will
+   # return quickly. If false (default), this constructor will block until the
+   # connection is closed.
+   background : Bool = false
   )
 
   MyClient.new(
@@ -91,6 +96,11 @@ arguments as the `WebSocket` constructors.
    # Any additional headers you wish. This argument is optional.
    # `WebSocket` will provide all necessary headers for the upgrade of the connection.
    headers : HTTP::Headers
+
+   # If true, this connection will run in the background and this constructor will
+   # return quickly. If false (default), this constructor will block until the
+   # connection is closed.
+   background : Bool = false
   )
 ```
 
