@@ -1,4 +1,5 @@
-require "channel.cr"
+require "http"
+require "json"
 
 module WS
 end
@@ -143,5 +144,48 @@ class WS::Client < WS::Protocol
   end
 end
 
+# Add a pre-defined JSON over-wire protocol to the above.
+module WS::JSON
+  # Provide an `onmessage` implementation, required by `WS::Service` and
+  # `WS::Client`. Direct the received messages to `on_text` or `on_json`,
+  # depending on the content.
+  #
+  def on_message(message : String)
+    json = ::JSON.parse(message)
+    if json["type"] == "$text$"
+      on_text(json["data"].to_s)
+    else
+      on_json(json["type"].to_s, json["data"])
+    end
+  end
+
+  def on_text(message : String)
+    STDERR.puts "#{PROGRAM_NAME} Received text: #{message}"
+  end
+
+  def on_json(type : String, data : ::JSON::Any)
+    STDERR.puts "#{PROGRAM_NAME} Received JSON #{type}: #{data.inspect}"
+  end
+
+  def send_json(type : String, data)
+    if !data.responds_to?(:to_json)
+      RuntimeError.new(
+       "#{self.class.name}#send_json: The #{data.class.name} provided as data doesn't implement a to_json method."
+      )
+    end
+    send({type: type, data: data}.to_json)
+  end
+
+  def send_text(message : String)
+    # There is no requirement for you to use odd characters in the type argument
+    # in your own code. They are just here so that our text message type won't
+    # collide with user-defined types.
+    send_json("$text$", message)
+  end
+end
+
+abstract class WS::Client::JSON < WS::Client
+  include WS::JSON
+end
 # See https://github.com/BrucePerens/ws_service for the service version, and
 # middleware.
