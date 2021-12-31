@@ -117,45 +117,37 @@ abstract class WS::Protocol
   end
 end
 
-# Client version of WS::Protocol.
 class WS::Client < WS::Protocol
-  def initialize(uri : String|URI, headers : HTTP::Headers = HTTP::Headers.new, background : Bool = false)
-    socket = HTTP::WebSocket.new(uri: uri)
-    internal_connect(socket)
-    if background
-      spawn name: "WS::Client for #{uri}" do
-        run
-      end
-    else
-      run
-    end
-  end
-
-  def initialize(host : String, path : String, port : Int32? = nil, tls : HTTP::Client::TLSContext = nil, headers : HTTP::Headers = HTTP::Headers.new, background : Bool = false)
-    socket = HTTP::WebSocket.new(host, path, port, tls, headers)
-    internal_connect(socket)
-    if background
-      spawn name: "WS::Client for #{host}:#{port||0}//#{path}" do
-        socket.run
-      end
-    else
-      socket.run
-    end
-  end
 end
 
-# Add a pre-defined JSON over-wire protocol to the above.
 module WS::JSON
-  # Provide an `onmessage` implementation, required by `WS::Service` and
-  # `WS::Client`. Direct the received messages to `on_text` or `on_json`,
-  # depending on the content.
-  #
+  getter uuid : UUID? = nil
+ 
   def on_message(message : String)
-    json = ::JSON.parse(message)
-    if json["type"] == "$text$"
-      on_text(json["data"].to_s)
-    else
-      on_json(json["type"].to_s, json["data"])
+    begin
+      json = ::JSON.parse(message)
+    rescue
+      # bad client data.
+      Log.error { "WS::Client #on_message couldn't parse message \"#{message.inspect}\" to JSON." }
+      return
+    end
+
+    type = json["type"]?.try &.as_s?
+    data = json["data"]?
+  
+    if type.is_a?(String) && data.is_a?(::JSON::Any)
+      case type
+      when "$text$"
+        on_text(data.to_s)
+      when "$uuid$"
+        if (uuid_json = data)
+          begin
+            @uuid = UUID.new(uuid_json.as_s)
+          rescue
+            @uuid = nil
+          end
+        end
+      end
     end
   end
 
